@@ -1,0 +1,40 @@
+name: FlowSync Enterprise Continuous Integration
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install Backend Dependencies
+        run: |
+          cd backend
+          npm ci || npm install
+
+      - name: Run Backend Seed & Automated Tests
+        run: |
+          cd backend
+          npm run seed
+          npm test
+
+      - name: Install Frontend Dependencies & Build Production Dist
+        run: |
+          cd frontend
+          npm ci || npm install
+          npm run build
