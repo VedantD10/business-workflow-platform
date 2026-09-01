@@ -22,7 +22,7 @@ const app = express();
 
 // Security Headers, Logging & CORS
 app.use(helmet({ crossOriginResourcePolicy: false }));
-app.use(cors({ origin: '*', credentials: true }));
+app.use(cors({ origin: true, credentials: true }));
 app.use(requestLogger);
 
 // Body Parser
