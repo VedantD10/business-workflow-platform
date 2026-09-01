@@ -50,6 +50,7 @@ function loadDatabase() {
     // Schema loaded and connected successfully
   }
 
+  let loaded = false;
   if (fs.existsSync(DB_FILE)) {
     try {
       const raw = fs.readFileSync(DB_FILE, 'utf8');
@@ -64,12 +65,22 @@ function loadDatabase() {
           autoIncrements[table] = maxId + 1;
         });
       }
+      if (state.users && state.users.length > 0) {
+        loaded = true;
+      }
     } catch (err) {
       console.error('Error reading database file, initializing fresh:', err.message);
+    }
+  }
+
+  if (!loaded || !state.users || state.users.length === 0) {
+    try {
+      const seedDatabase = require('./seed');
+      seedDatabase();
+    } catch (e) {
+      console.error('Auto-seed fallback execution:', e.message);
       saveDatabase();
     }
-  } else {
-    saveDatabase();
   }
 }
 

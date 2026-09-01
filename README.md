@@ -182,6 +182,7 @@ Detailed technical specifications and architectural documentation are available 
 - [Engineering Assessment Report](./docs/PROJECT_REPORT.md)
 - [Security & File Protection](./docs/SECURITY.md)
 - [Deployment Configuration](./docs/DEPLOYMENT.md)
+- [Vercel Deployment QA Report](./docs/DEPLOYMENT_QA_REPORT.md)
 - [Project Assumptions](./docs/ASSUMPTIONS.md)
 
 ---
