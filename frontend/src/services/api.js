@@ -24,10 +24,15 @@ export async function apiFetch(endpoint, options = {}) {
     const data = await res.json().catch(() => ({}));
 
     if (!res.ok) {
-      const errorMsg = data?.error?.message || res.statusText || 'An unexpected request error occurred';
+      const errorMsg = 
+        data?.error?.message || 
+        (typeof data?.error === 'string' ? data.error : null) || 
+        data?.message || 
+        res.statusText || 
+        `Request failed with status code ${res.status}`;
       const error = new Error(errorMsg);
       error.status = res.status;
-      error.details = data?.error?.details;
+      error.details = data?.error?.details || data?.details;
       throw error;
     }
 

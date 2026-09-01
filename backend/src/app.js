@@ -20,6 +20,9 @@ const requestLogger = require('./middleware/logger');
 
 const app = express();
 
+// Trust reverse proxies (essential for Vercel & serverless environments)
+app.set('trust proxy', 1);
+
 // Security Headers, Logging & CORS
 app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(cors({ origin: true, credentials: true }));
@@ -37,25 +40,33 @@ const authLimiter = rateLimit({
 });
 
 // Health Check Endpoint
-app.get('/api/health', (req, res) => {
+const handleHealth = (req, res) => {
   res.status(200).json({
     success: true,
     status: 'UP',
     system: 'VESA Business Workflow Platform API',
     timestamp: new Date().toISOString()
   });
-});
+};
 
-// Mount Routes
-app.use('/api/auth', authLimiter, authRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/departments', departmentRoutes);
-app.use('/api/requests', requestRoutes);
-app.use('/api/comments', commentRoutes);
-app.use('/api/attachments', attachmentRoutes);
-app.use('/api/notifications', notificationRoutes);
-app.use('/api/analytics', analyticsRoutes);
-app.use('/api/audit', auditRoutes);
+app.get('/api/health', handleHealth);
+app.get('/health', handleHealth);
+
+// Mount Routes (supporting both /api prefix and direct path matching)
+const registerRoutes = (prefix) => {
+  app.use(`${prefix}/auth`, authLimiter, authRoutes);
+  app.use(`${prefix}/users`, userRoutes);
+  app.use(`${prefix}/departments`, departmentRoutes);
+  app.use(`${prefix}/requests`, requestRoutes);
+  app.use(`${prefix}/comments`, commentRoutes);
+  app.use(`${prefix}/attachments`, attachmentRoutes);
+  app.use(`${prefix}/notifications`, notificationRoutes);
+  app.use(`${prefix}/analytics`, analyticsRoutes);
+  app.use(`${prefix}/audit`, auditRoutes);
+};
+
+registerRoutes('/api');
+registerRoutes('');
 
 // Handle 404
 app.use((req, res, next) => {

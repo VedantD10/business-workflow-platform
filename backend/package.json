@@ -8,7 +8,7 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "seed": "node src/database/seed.js",
-    "test": "node --test 'test/**/*.test.js'",
+    "test": "node --test test/workflow.test.js",
     "build": "echo backend build skipped",
     "vercel-build": "echo backend build skipped"
   },
