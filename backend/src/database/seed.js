@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
-const db = require('./db');
 
-function seedDatabase() {
+function seedDatabase(dbInstance) {
+  const db = dbInstance || require('./db');
   console.log('Seeding Database with enterprise initial data...');
 
   db.reset();
@@ -130,7 +130,7 @@ function seedDatabase() {
   const pastHours = (h) => new Date(now.getTime() - h * 60 * 60 * 1000).toISOString();
 
   const requests = [
-    // Request 1: Software Access (Example from PDF: Aarav Sharma)
+    // Request 1: Software Access
     {
       id: 1,
       request_number: 'REQ-2026-00001',
@@ -154,7 +154,7 @@ function seedDatabase() {
       completed_at: null
     },
 
-    // Request 2: Expense Reimbursement (Example from PDF: Priya Mehta)
+    // Request 2: Expense Reimbursement
     {
       id: 2,
       request_number: 'REQ-2026-00002',
@@ -179,7 +179,7 @@ function seedDatabase() {
       completed_at: null
     },
 
-    // Request 3: Document Approval (Example from PDF: Neha Verma)
+    // Request 3: Document Approval
     {
       id: 3,
       request_number: 'REQ-2026-00003',
@@ -202,7 +202,7 @@ function seedDatabase() {
       completed_at: null
     },
 
-    // Request 4: Equipment Request (Example from PDF: Rohan Patil)
+    // Request 4: Equipment Request
     {
       id: 4,
       request_number: 'REQ-2026-00004',
@@ -221,7 +221,7 @@ function seedDatabase() {
         required_date: '2026-09-08',
         additional_info: 'Needs USB-C hub built-in if available'
       }),
-      created_at: pastHours(80), // Overdue SLA (>72h)
+      created_at: pastHours(80),
       updated_at: pastHours(80),
       completed_at: null
     },
@@ -253,7 +253,7 @@ function seedDatabase() {
   ];
   requests.forEach(req => db.insert('requests', req));
 
-  // 7. Initial Approvals & Audit Trail entries for realistic history
+  // 7. Initial Approvals & Audit Trail entries
   const approvals = [
     {
       id: 1,

@@ -5,10 +5,6 @@ const config = require('../config/env');
 const DB_FILE = config.DB_PATH;
 const DB_DIR = path.dirname(DB_FILE);
 
-if (!fs.existsSync(DB_DIR)) {
-  fs.mkdirSync(DB_DIR, { recursive: true });
-}
-
 let state = {
   users: [],
   departments: [],
@@ -42,49 +38,18 @@ let autoIncrements = {
   audit_logs: 1
 };
 
-function loadDatabase() {
-  // Verify and execute relational SQL schema definition
-  const schemaFile = path.join(__dirname, 'schema.sql');
-  if (fs.existsSync(schemaFile)) {
-    const sqlContent = fs.readFileSync(schemaFile, 'utf8');
-    // Schema loaded and connected successfully
-  }
-
-  let loaded = false;
-  if (fs.existsSync(DB_FILE)) {
+function ensureDbDir() {
+  if (!fs.existsSync(DB_DIR)) {
     try {
-      const raw = fs.readFileSync(DB_FILE, 'utf8');
-      const data = JSON.parse(raw);
-      state = { ...state, ...data.tables };
-      if (data.autoIncrements) {
-        autoIncrements = { ...autoIncrements, ...data.autoIncrements };
-      } else {
-        // Re-calculate autoIncrements
-        Object.keys(state).forEach((table) => {
-          const maxId = state[table].reduce((max, row) => Math.max(max, row.id || 0), 0);
-          autoIncrements[table] = maxId + 1;
-        });
-      }
-      if (state.users && state.users.length > 0) {
-        loaded = true;
-      }
+      fs.mkdirSync(DB_DIR, { recursive: true });
     } catch (err) {
-      console.error('Error reading database file, initializing fresh:', err.message);
-    }
-  }
-
-  if (!loaded || !state.users || state.users.length === 0) {
-    try {
-      const seedDatabase = require('./seed');
-      seedDatabase();
-    } catch (e) {
-      console.error('Auto-seed fallback execution:', e.message);
-      saveDatabase();
+      console.error('Failed to create DB directory:', err.message);
     }
   }
 }
 
 function saveDatabase() {
+  ensureDbDir();
   try {
     const tempFile = `${DB_FILE}.tmp`;
     const payload = JSON.stringify({ tables: state, autoIncrements }, null, 2);
@@ -95,10 +60,54 @@ function saveDatabase() {
   }
 }
 
-// Database Operations Wrapper
+// Database Operations Engine
 class DatabaseEngine {
   constructor() {
-    loadDatabase();
+    this.load();
+  }
+
+  load() {
+    ensureDbDir();
+    const schemaFile = path.join(__dirname, 'schema.sql');
+    if (fs.existsSync(schemaFile)) {
+      try {
+        const sqlContent = fs.readFileSync(schemaFile, 'utf8');
+      } catch (e) {
+        // Schema loader fallback
+      }
+    }
+
+    let loaded = false;
+    if (fs.existsSync(DB_FILE)) {
+      try {
+        const raw = fs.readFileSync(DB_FILE, 'utf8');
+        const data = JSON.parse(raw);
+        state = { ...state, ...data.tables };
+        if (data.autoIncrements) {
+          autoIncrements = { ...autoIncrements, ...data.autoIncrements };
+        } else {
+          Object.keys(state).forEach((table) => {
+            const maxId = state[table].reduce((max, row) => Math.max(max, row.id || 0), 0);
+            autoIncrements[table] = maxId + 1;
+          });
+        }
+        if (state.users && state.users.length > 0) {
+          loaded = true;
+        }
+      } catch (err) {
+        console.error('Error reading database file, initializing fresh:', err.message);
+      }
+    }
+
+    if (!loaded || !state.users || state.users.length === 0) {
+      try {
+        const seedDatabase = require('./seed');
+        seedDatabase(this);
+      } catch (e) {
+        console.error('Auto-seed execution error:', e.message);
+        saveDatabase();
+      }
+    }
   }
 
   getTable(tableName) {
@@ -190,7 +199,6 @@ class DatabaseEngine {
   }
 
   transaction(fn) {
-    // Atomic execution block
     const backupState = JSON.parse(JSON.stringify(state));
     const backupCounters = { ...autoIncrements };
     try {
