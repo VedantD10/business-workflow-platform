@@ -36,7 +36,7 @@ function requireRequestAccess() {
       return next();
     }
 
-    const requestId = req.params.id || req.body.request_id;
+    const requestId = req.params.id || req.params.requestId || req.body.request_id || req.query.request_id;
     if (!requestId) return next();
 
     const request = db.findById('requests', requestId);
