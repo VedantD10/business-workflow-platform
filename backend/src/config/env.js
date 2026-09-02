@@ -10,6 +10,7 @@ module.exports = {
   NODE_ENV: process.env.NODE_ENV || 'development',
   JWT_SECRET: process.env.JWT_SECRET || 'vesa_enterprise_workflow_secure_jwt_secret_key_2026_prod',
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '24h',
+  DATABASE_URL: process.env.DATABASE_URL || null,
   DB_PATH: process.env.DB_PATH || defaultDbPath,
   UPLOAD_DIR: process.env.UPLOAD_DIR || defaultUploadDir,
   MAX_FILE_SIZE: 10 * 1024 * 1024, // 10 MB
